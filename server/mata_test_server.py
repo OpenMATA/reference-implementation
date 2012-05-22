@@ -61,29 +61,25 @@ def _get_campaign_name(app_name, campaign_id):
     return "%s campaign %s" % (app_name, campaign_id)
 
 
-
-#------------------------------------------------------------------------
-
 def check_auth(username, password):
     return username in ACCOUNT and ACCOUNT[username]['password'] == password
 
 
-def authenticate():
-    """Sends a 401 response that enables basic auth"""
-    return Response(
-    'Could not verify your access level for that URL.\n'
-    'You have to login with proper credentials', 401,
-    {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+#------------------------------------------------------------------------
 
 
 def requires_auth(f):
     @functools.wraps(f)
     def decorated(*args, **kwargs):
         auth = request.authorization
-        if not auth or not check_auth(auth.username, auth.password):
-            return authenticate()
-        else:
+        if auth and check_auth(auth.username, auth.password):
             return f(*args, **kwargs)
+        return Response(
+                    'Could not verify your access level for that URL.\nYou have to login with proper credentials',
+                    401,
+                    {'WWW-Authenticate': 'Basic realm="Login Required"'}
+                    )
     return decorated
 
 
@@ -93,48 +89,29 @@ def _json_response(data, **kwargs):
 
 @app.route('/')
 def index():
+
     try:
-        username = request.authorization.username
+        # TODO: this may not work
+        current_user = request.authorization.username
     except:
-        username = 'N/A'
+        current_user = 'N/A'
 
     # deauthorzie URL (verified works in Chrome)
     parts = list(urlparse.urlsplit(request.url))
     parts[1] = 'x:y@' + parts[1]
-    url = urlparse.urlunsplit(parts)
+    deauthorzie_url = urlparse.urlunsplit(parts)
 
     today = datetime.datetime.utcnow().date().isoformat()
 
     agg_url = "/v1/campaign_aggregate?start_day=%s&end_day=%s" % (today, today)
     install_url = "/v1/installs?day=%s" % (today,)
 
-    return """
-<h1>MATA Demo Server</h1>
-
-<p>Registered Users: %s</p>
-
-<p>Current User: %s<br />
-<small style='color:#777'>To deauthorize, try enter an URL like <a href="%s">%s</a></small>
-</p>
-
-<p>Test URLs</p>
-<ul>
-<li><a href="/v1/application_list"  >/v1/application_list   </a></li>
-<li><a href="%s">%s</a></li>
-<li><a href="%s">%s</a></li>
-</ul>
-
-<a href="http://openmata.org/">MATA APIs (DRAFT) : (stay tuned)</a>
-
-""" % (
-    ', '.join(sorted(ACCOUNT.keys())),
-        username,
-        url,
-        url,
-        agg_url,
-        agg_url,
-        install_url,
-        install_url,
+    return render_template('index.html',
+        usernames = ', '.join(sorted(ACCOUNT.keys())),
+        current_user = current_user,
+        deauthorzie_url = deauthorzie_url,
+        agg_url = agg_url,
+        install_url = install_url,
     )
 
 

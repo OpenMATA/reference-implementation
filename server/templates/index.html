@@ -1,19 +1,31 @@
-<h1>MATA Demo Server</h1>
+<!DOCTYPE html>
+<html>
 
-<p>This is a demo server implementation of the <a href="http://openmata.org/">MATA API v0.0</a>.
+<head lang="en">
+  <meta charset="utf-8">
+  <title>MATA Demo Server</title>
+</head>
 
-<p>API Test</p>
-<ul>
-<li><a href="/v1/application_list"  >/v1/application_list   </a></li>
-<li><a href="{{ agg_url }}">{{ agg_url }}</a></li>
-<li><a href="{{ install_url }}">{{ install_url }}</a></li>
-</ul>
+<body>
 
-<p>Demo Users: {{ usernames }} (password: pass)</p>
+    <h1>MATA Demo Server</h1>
 
-<p><a href="{{ deauthorzie_url }}">Logout</a> via [ {{ deauthorzie_url }} ]
-</p>
+    <p>This is a demo server implementation of the <a href="http://openmata.org/">MATA API v0.0</a>.
 
-<p>Get source code or report issues on <a href="https://github.com/OpenMATA/reference-implementation">GitHub</a></p>
+    <p>API Test</p>
+    <ul>
+    <li><a href="/v1/application_list"  >/v1/application_list   </a></li>
+    <li><a href="{{ agg_url }}">{{ agg_url }}</a></li>
+    <li><a href="{{ install_url }}">{{ install_url }}</a></li>
+    </ul>
 
+    <p>Demo Users: {{ usernames }} (password: pass)</p>
+
+    <p><a href="{{ deauthorzie_url }}">Logout</a> via [ {{ deauthorzie_url }} ]
+    </p>
+
+    <p>Get source code or report issues on <a href="https://github.com/OpenMATA/reference-implementation">GitHub</a></p>
+
+</body>
+</html>
 

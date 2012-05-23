@@ -9,16 +9,10 @@ try:
     import json
 except ImportError:
     import simplejson as json
-from dateutil.parser import *
 from flask import *
 
 app = Flask(__name__)
-
 app.debug = True
-
-
-#TODO: clean this up
-
 
 
 class AuthenticationError(Exception): pass
@@ -40,22 +34,24 @@ class DemoData(object):
     """
 
     ACCOUNTS = {
-    'test1': dict(username='test1', password='test1', app_ids=['12341', '12342', DANGER_STR]),
-    'test2': dict(username='test2', password='test2', app_ids=['12351', '12352']),
+    'test1': dict(username='test1', password='pass', app_ids=['12341', '12342']),
+    'test2': dict(username='test2', password='pass', app_ids=['12351', '12352']),
+    'test3': dict(username='test3', password='pass', app_ids=[DANGER_STR]),
     }
 
     APPLICATIONS = {
-    '12341'   : {"app_id": "12341",   "application_name": 'Best Game Ever',       "bundle_id": "com.demo.best_game"},
-    '12342'   : {"app_id": "12342",   "application_name": u'\u4e09\u570b\u5fd73', "bundle_id": "com.demo.three_kingdom3"},
-    DANGER_STR: {"app_id": DANGER_STR,"application_name": DANGER_STR ,            "bundle_id": "com.demo.danger"},
-    '12351'   : {"app_id": "12351",   "application_name": 'Test app2',            "bundle_id": "com.demo.test_app2"},
-    '12352'   : {"app_id": "12352",   "application_name": u'\u6c34\u6ef8\u50b3',  "bundle_id": "com.demo.water_margin"},
+    '12341'   : {"app_id": "12341",   "application_name": 'Best Game Ever',       "bundle_id": "com.foo.best_game"},
+    '12342'   : {"app_id": "12342",   "application_name": u'\u4e09\u570b\u5fd73', "bundle_id": "com.foo.three_kingdom3"},
+    '12351'   : {"app_id": "12351",   "application_name": 'Test app2',            "bundle_id": "com.bar.test_app2"},
+    '12352'   : {"app_id": "12352",   "application_name": u'\u6c34\u6ef8\u50b3',  "bundle_id": "com.bar.water_margin"},
+    DANGER_STR: {"app_id": DANGER_STR,"application_name": DANGER_STR ,            "bundle_id": "com.test.danger"},
     }
 
     def __init__(self, username, password):
         if not (username in self.ACCOUNTS and self.ACCOUNTS[username]['password'] == password):
             raise AuthenticationError()
         self.account = self.ACCOUNTS[username]
+
 
     @classmethod
     def get_users(cls):
@@ -72,7 +68,7 @@ class DemoData(object):
 
     def get_install_device_id(self, date, app_id):
         """
-        A deterministic algorithm to generate random data for a day
+        Deterministic random algorithm to generate list of device id for a day
         """
         msg = 'some deterministic msg %s,%s' % (date,app_id)
         h = hashlib.md5(msg)
@@ -91,13 +87,13 @@ class DemoData(object):
 
     @staticmethod
     def _get_campaign_name(app_name, campaign_id):
-        return "%s campaign %s" % (app_name, campaign_id)
+        return "%s campaign-%s" % (app_name, campaign_id)
 
 
 
 
 #------------------------------------------------------------------------
-
+# Helper functions
 
 def requires_auth(f):
     @functools.wraps(f)
@@ -140,18 +136,21 @@ def _unsupport_timezone_response(tz):
             ])
 
 
+
+#------------------------------------------------------------------------
+# View functions
+
 @app.route('/')
 def index():
-
     try:
         # TODO: this may not work
         current_user = request.authorization.username
     except:
         current_user = 'N/A'
 
-    # deauthorzie URL (verified works in Chrome)
+    # deauthorzie URL (Link works in Firefox and Chrome. In Opera need to paste in address bar. Not work in IE.)
     parts = list(urlparse.urlsplit(request.url))
-    parts[1] = 'x:y@' + parts[1]
+    parts[1] = 'foobar@' + parts[1]
     deauthorzie_url = urlparse.urlunsplit(parts)
 
     today = datetime.datetime.utcnow().date().isoformat()
@@ -169,8 +168,6 @@ def index():
 
 
 
-#------------------------------------------------------------------------
-
 @app.route('/v1/application_list')
 @requires_auth
 def get_application_list(account):
@@ -178,6 +175,7 @@ def get_application_list(account):
     Handler of the Application List Endpoint
     """
     app_list = [account.get_app(id) for id in account.get_app_ids()]
+    # assume DemoData.APPLICATIONS' match MATA's response
     return _json_response({
         'status': 'full',
         'data': app_list,
@@ -210,10 +208,15 @@ def get_campaign_aggregate(account):
     agg_data = []
     iday = start_day
     while iday <= end_day:
-        campaign_id = 10
-        for app_id in app_list :
-            app_name = account.get_app(app_id)['application_name']
+        for app_id in app_list:
+            app = account.get_app(app_id)
+            if not app:
+                continue
+
+            # construct some attributes
+            app_name = app['application_name']
             date_str = iday.isoformat()
+            campaign_id = 10
             install_device_ids = account.get_install_device_id(date_str, app_id)
 
             # simple multiple of installs
@@ -223,23 +226,20 @@ def get_campaign_aggregate(account):
             spend = num_installs * 150
 
             agg_data.append({
-                "day": date_str,
-                "app_id": app_id,
-                "campaign_id": campaign_id,
-                "campaign_name": DemoData._get_campaign_name(app_name, campaign_id),
-                "impressions": num_impressions,
-                "clicks": num_clicks,
-                "downloads": num_installs,
-                "spend": spend,
-                "target_manufacturer": [
-                    "Samsung",
-                ],
-                "target_platform": [
-                    "Nexus S",
-                    u"\u963f\u91cc\u4e91",
-                ],
+                "day"                 : date_str,
+                "app_id"              : app_id,
+                "bundle_id"           : app['bundle_id'],
+                "campaign_id"         : campaign_id,
+                "campaign_name"       : DemoData._get_campaign_name(app_name, campaign_id),
+                "impressions"         : num_impressions,
+                "clicks"              : num_clicks,
+                "downloads"           : num_installs,
+                "spend"               : spend,
+                "currency"            : "USD",
+                "target_manufacturer" : ["Samsung"],
+                "target_platform"     : ["Nexus S", u"\u963f\u91cc\u4e91"],
+                "target_country_code" : ["US"],
             })
-
         iday += datetime.timedelta(1)
 
     return _json_response({
@@ -272,17 +272,24 @@ def get_installs(account):
     # generate data
     installs = []
     for app_id in app_list:
-        app_name = account.get_app(app_id)['application_name']
-        install_device_ids = account.get_install_device_id(day, app_id)
+        app = account.get_app(app_id)
+        if not app:
+            continue
+
+        # construct some attributes
+        app_name = app['application_name']
         campaign_id = 10
+        install_device_ids = account.get_install_device_id(day, app_id)
+
         for did in install_device_ids:
             installs.append({
-                "device_ids": {"udid": did},
-                "app_id": app_id,
-                "campaign_id": campaign_id,
-                "campaign_name": DemoData._get_campaign_name(app_name, campaign_id),
-                "creative": "cats.jpg",
-                "location": "BF",
+                "device_ids"    : {"udid": did},
+                "app_id"        : app_id,
+                "bundle_id"     : app['bundle_id'],
+                "campaign_id"   : campaign_id,
+                "campaign_name" : DemoData._get_campaign_name(app_name, campaign_id),
+                "creative"      : "cats.jpg",
+                "incentivized"  : 0,
             })
 
     return _json_response({

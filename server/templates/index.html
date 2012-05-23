@@ -1,10 +1,6 @@
 <h1>MATA Demo Server</h1>
 
-<p>Registered Users: {{ usernames }}</p>
-
-<p>Current User: {{ current_user }}<br />
-<small style='color:#777'>To deauthorize, try enter an URL like <a href="{{ deauthorzie_url }}">{{ deauthorzie_url }}</a></small>
-</p>
+<p>This is a demo server implementation of the <a href="http://openmata.org/">MATA API v0.0</a>.
 
 <p>API Test</p>
 <ul>
@@ -13,4 +9,11 @@
 <li><a href="{{ install_url }}">{{ install_url }}</a></li>
 </ul>
 
-<a href="http://openmata.org/">MATA APIs (DRAFT) : (stay tuned)</a>
+<p>Demo Users: {{ usernames }} (password: pass)</p>
+
+<p><a href="{{ deauthorzie_url }}">Logout</a> via [ {{ deauthorzie_url }} ]
+</p>
+
+<p>Get source code or report issues on <a href="https://github.com/OpenMATA/reference-implementation">GitHub</a></p>
+
+

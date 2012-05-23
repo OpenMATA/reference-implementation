@@ -1,11 +1,8 @@
 MATA Reference Implementation
 =============================
 
-This is a MATA server reference implementation.
-
-To launch MATA test server, run
-
-    python mata_test_server.py
+This is a MATA server reference implementation. The current version of MATA Test Server is hosted at
+<http://test-server.openmata.org/>
 
 The test server is written in Python. It has dependency on these software:
 
@@ -13,5 +10,8 @@ The test server is written in Python. It has dependency on these software:
 - simplejson (only needed for Python 2.5)
 - Flask
 
-See:
-<http://openmata.org/>
+To run MATA test server from source code, use
+
+    python mata_test_server.py
+
+Then connect to it using the URL http://localhost:5000/.

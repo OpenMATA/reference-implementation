@@ -5,7 +5,7 @@ This is a MATA server reference implementation.
 
 To launch MATA test server, run
 
-    python2.5 mata_test_server.py
+    python mata_test_server.py
 
 The test server is written in Python. It has dependency on these software:
 

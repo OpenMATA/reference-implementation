@@ -104,14 +104,14 @@ def main():
     args = parser.parse_args()
 
     acc = DemoData(args.u, args.p)
-    device_ids = acc.get_install_device_id(args.date, args.a)
+    install_data = acc.generate_install_data(args.date, args.a)
     print 'date      : %s' % args.date
     print 'app_ids   : %s' % acc.get_app_ids()
     print 'app       : %s' % acc.get_app(args.a)
-    print 'device_ids: %s' % len(device_ids)
+    print 'device_ids: %s' % len(install_data)
 
-    for did in device_ids:
-        print '  ', did
+    for did, campaign_id in install_data:
+        print '  ', did, campaign_id
 
 
 if __name__ =='__main__':

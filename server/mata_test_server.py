@@ -3,6 +3,8 @@
 import datetime
 import functools
 import hashlib
+import itertools
+import operator
 import urlparse
 
 try:
@@ -145,30 +147,36 @@ def get_campaign_aggregate(account):
             # construct some attributes
             app_name = app['application_name']
             date_str = iday.isoformat()
-            campaign_id = 10
-            install_device_ids = account.get_install_device_id(date_str, app_id)
+            installs = account.generate_install_data(date_str, app_id)
 
-            # simple multiple of installs
-            num_installs = len(install_device_ids)
-            num_impressions = num_installs*5
-            num_clicks = num_installs*2
-            spend = num_installs * 150
+            def _gen_campaign(num_installs, campaign_id):
+                # simple multiple of installs
+                num_impressions = num_installs*5
+                num_clicks = num_installs*2
+                spend = num_installs * 150
 
-            agg_data.append({
-                "day"                 : date_str,
-                "app_id"              : app_id,
-                "bundle_id"           : app['bundle_id'],
-                "campaign_id"         : campaign_id,
-                "campaign_name"       : DemoData._get_campaign_name(app_name, campaign_id),
-                "impressions"         : num_impressions,
-                "clicks"              : num_clicks,
-                "downloads"           : num_installs,
-                "spend"               : spend,
-                "currency"            : "USD",
-                "target_manufacturer" : ["Samsung"],
-                "target_platform"     : ["Nexus S", u"\u963f\u91cc\u4e91"],
-                "target_country_code" : ["US"],
-            })
+                agg_data.append({
+                    "day"                 : date_str,
+                    "app_id"              : app_id,
+                    "bundle_id"           : app['bundle_id'],
+                    "campaign_id"         : campaign_id,
+                    "campaign_name"       : DemoData._get_campaign_name(app_name, campaign_id),
+                    "impressions"         : num_impressions,
+                    "clicks"              : num_clicks,
+                    "downloads"           : num_installs,
+                    "spend"               : spend,
+                    "currency"            : "USD",
+                    "target_manufacturer" : ["Samsung"],
+                    "target_platform"     : ["Nexus S", u"\u963f\u91cc\u4e91"],
+                    "target_country_code" : ["US"],
+                })
+
+            get_campaign_id = operator.itemgetter(1)
+            installs.sort(key=get_campaign_id)
+            for campaign_id, g in itertools.groupby(installs, get_campaign_id):
+                count = len(list(g))
+                _gen_campaign(count, campaign_id)
+
         iday += datetime.timedelta(1)
 
     return _json_response({
@@ -207,10 +215,9 @@ def get_installs(account):
 
         # construct some attributes
         app_name = app['application_name']
-        campaign_id = 10
-        install_device_ids = account.get_install_device_id(day, app_id)
+        device_campaign_lst = account.generate_install_data(day, app_id)
 
-        for did in install_device_ids:
+        for did, campaign_id in device_campaign_lst:
             installs.append({
                 "device_ids"    : {"udid": did},
                 "app_id"        : app_id,

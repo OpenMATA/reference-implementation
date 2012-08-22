@@ -60,9 +60,11 @@ class DemoData(object):
         return self.APPLICATIONS.get(id)
 
 
-    def get_install_device_id(self, date, app_id):
+    def generate_install_data(self, date, app_id):
         """
         Deterministic random algorithm to generate list of device id for a day
+
+        @returns: list of (device_id, campaign_id)
         """
         msg = 'some deterministic msg %s,%s' % (date,app_id)
         h = hashlib.md5(msg)
@@ -73,12 +75,17 @@ class DemoData(object):
 
         num_installs = int(app['base_install'] + app['rand_install']*r0)
 
-        device_id_list = []
+        result = []
         for i in xrange(num_installs):
             h.update('tada %s' % i)
-            device_id_list.append(h.hexdigest())
+            did = h.hexdigest()
 
-        return device_id_list
+            # simple rule to split the install into two campaigns
+            campaign_id = 10 + (i % 2)
+
+            result.append((did, campaign_id))
+
+        return result
 
 
     @staticmethod

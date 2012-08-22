@@ -11,84 +11,13 @@ except ImportError:
     import simplejson as json
 from flask import *
 
+from sample_model import DemoData
+
 app = Flask(__name__)
 app.debug = True
 
 
 class AuthenticationError(Exception): pass
-
-
-#------------------------------------------------------------------------
-# Demo Data Model
-
-DANGER_STR = '&D\\anger\'"+<b>@?!mb'
-
-class DemoData(object):
-    """
-    This is the basic data model of the MATA test server.
-
-    It uses a deterministic random algorithm to simulate daily record. Each day
-    it returns a varible number of devices id. Note that the data model only
-    cover the basics. The view function fill in other data values using simple
-    rules.
-    """
-
-    ACCOUNTS = {
-    'test1': dict(username='test1', password='pass', app_ids=['12341', '12342']),
-    'test2': dict(username='test2', password='pass', app_ids=['12351', '12352']),
-    'test3': dict(username='test3', password='pass', app_ids=[DANGER_STR]),
-    }
-
-    APPLICATIONS = {
-    '12341'   : {"app_id": "12341",   "application_name": 'Best Game Ever',       "bundle_id": "com.foo.best_game"},
-    '12342'   : {"app_id": "12342",   "application_name": u'\u4e09\u570b\u5fd73', "bundle_id": "com.foo.three_kingdom3"},
-    '12351'   : {"app_id": "12351",   "application_name": 'Test app2',            "bundle_id": "com.bar.test_app2"},
-    '12352'   : {"app_id": "12352",   "application_name": u'\u6c34\u6ef8\u50b3',  "bundle_id": "com.bar.water_margin"},
-    DANGER_STR: {"app_id": DANGER_STR,"application_name": DANGER_STR ,            "bundle_id": "com.test.danger"},
-    }
-
-    def __init__(self, username, password):
-        if not (username in self.ACCOUNTS and self.ACCOUNTS[username]['password'] == password):
-            raise AuthenticationError()
-        self.account = self.ACCOUNTS[username]
-
-
-    @classmethod
-    def get_users(cls):
-        return cls.ACCOUNTS.keys()
-
-
-    def get_app_ids(self):
-        return self.account['app_ids']
-
-
-    def get_app(self, id):
-        return self.APPLICATIONS.get(id)
-
-
-    def get_install_device_id(self, date, app_id):
-        """
-        Deterministic random algorithm to generate list of device id for a day
-        """
-        msg = 'some deterministic msg %s,%s' % (date,app_id)
-        h = hashlib.md5(msg)
-        # a random number in [0, 1)
-        r0 = ord(h.digest()[0]) / 256.0
-
-        num_installs = int(10 + 10*r0)
-
-        device_id_list = []
-        for i in xrange(num_installs):
-            h.update('tada %s' % i)
-            device_id_list.append(h.hexdigest())
-
-        return device_id_list
-
-
-    @staticmethod
-    def _get_campaign_name(app_name, campaign_id):
-        return "%s campaign-%s" % (app_name, campaign_id)
-
 
 
 

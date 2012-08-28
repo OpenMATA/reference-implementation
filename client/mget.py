@@ -60,7 +60,9 @@ def fetch_json(args, out, url, data=None):
     # 1. request and basic authentication
     req = urllib2.Request(url, data=data)
     auth = '%s:%s' % (args.user, args.password)
-    auth = auth.encode('base64').rstrip()
+    auth = auth.encode('base64')
+    # By default long base64 string are broken into multiple lines. Join them into single line. Also drop the trailing \n.
+    auth = auth.replace('\n','')
     req.add_header("Authorization", "Basic %s" % auth)
 
     # 2. http fetch

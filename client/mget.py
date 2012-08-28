@@ -98,6 +98,8 @@ def mata_get_agg(args):
         params = {'start_day': args.start, 'end_day': args.end}
         if args.app_id:
             params['app_id'] = args.app_id
+        if args.tz:
+            params['tz'] = args.tz
 
         url = args.base_url + '/v1/campaign_aggregate?' + urllib.urlencode(params)
 
@@ -108,20 +110,20 @@ def mata_get_agg(args):
         assert isinstance(content, dict)
         data = content.get('data',[])
 
-        FORMAT = '%-10s %-10s %-40s %8s %8s %8s %8s'
+        FORMAT = '%-10s %-40s %8s %8s %8s %8s %-10s'
         print
-        print FORMAT % ('day', 'app_id', 'campaign', 'imp', 'clicks', 'download', 'spend')
-        print '-' * 100
+        print FORMAT % ('day', 'campaign', 'imp', 'clicks', 'download', 'spend', 'app_id')
+        print '-' * 110
 
         for i, item in enumerate(data):
             print FORMAT % (
                 item.get('day'          , '?'),
-                item.get('app_id'       , '?'),
                 item.get('campaign_name', '?'),
                 item.get('impressions'  , '?'),
                 item.get('clicks'       , '?'),
                 item.get('downloads'    , '?'),
                 item.get('spend'        , '?'),
+                item.get('app_id'       , '?'),
                 )
 
 
@@ -131,6 +133,8 @@ def mata_get_ins(args):
         params = {'day': args.start}
         if args.app_id:
             params['app_id'] = args.app_id
+        if args.tz:
+            params['tz'] = args.tz
 
         url = args.base_url + '/v1/installs?' + urllib.urlencode(params)
 
@@ -144,7 +148,12 @@ def mata_get_ins(args):
         installs = data.get('installs',[])
         print 'Found %s installs day=%s' % (len(installs), data.get('day'))
         for i, item in enumerate(installs):
-            print '  %2d %s app_id=%s campaign_name="%s"' % (i, item.get('device_ids','?'), item.get('app_id','?'), item.get('campaign_name','?'))
+            device_ids = item.get('device_ids', item.get('device_id', '?'))     # NOTE: temporary workaround for chartboost. they spell device_id without a 's'!!!
+            print '  %2d %s app_id=%s campaign_name="%s"' % (i,
+                device_ids,
+                item.get('app_id','?'),
+                item.get('campaign_name','?'),
+                )
 
 
 def main():
@@ -154,8 +163,9 @@ def main():
     parser.add_argument('-p', '--password', help='password')
     parser.add_argument('-e', '--end-point', default='app', choices=['app', 'agg', 'ins'], help='Select the MATA end_point')
     parser.add_argument('-a', '--app-id', help='app_id')
-    parser.add_argument('-o', '--output', help='Save http fetch in files. Filenames are augmented with date string.')
+    parser.add_argument('-o', '--output', help='Save http content in files. Filenames are augmented with date string.')
     parser.add_argument('-x', action='store_true', help='Validate MATA result in strict mode (to be implemented)')
+    parser.add_argument('-z', '--tz', help='Time zone (3 letter code)')
     parser.add_argument('base_url', default=DEFAULT_BASE_URL, nargs='?', help='Base URL')
     parser.add_argument('start', default=today, nargs='?', help='start date yyyy-mm-dd (default today)')
     parser.add_argument('end', default=today, nargs='?', help='end date yyyy-mm-dd (default today)')

@@ -23,6 +23,8 @@ class DemoData(object):
     rules.
     """
 
+    class AuthenticationError(Exception): pass
+
     ACCOUNTS = {
     'test1': dict(username='test1', password='pass', app_ids=['12341', '12342', '12343']),
     'test2': dict(username='test2', password='pass', app_ids=['12351', '12352']),
@@ -43,7 +45,7 @@ class DemoData(object):
 
     def __init__(self, username, password):
         if not (username in self.ACCOUNTS and self.ACCOUNTS[username]['password'] == password):
-            raise AuthenticationError()
+            raise self.AuthenticationError()
         self.account = self.ACCOUNTS[username]
 
 
@@ -80,10 +82,14 @@ class DemoData(object):
             h.update('tada %s' % i)
             did = h.hexdigest()
 
-            # simple rule to split the install into two campaigns
-            campaign_id = 10 + (i % 2)
+            # break the installs into campaign group of 6
+            # the cost encode the rank in the group
+            # adding the cost of all 6 together should be 63 (0x3f)
+            x,y = divmod(i,6)
+            campaign_id = 10 + x
+            cost = 1 + 0.01 * pow(2,y)
 
-            result.append((did, campaign_id))
+            result.append((did, campaign_id, cost))
 
         return result
 
@@ -110,8 +116,8 @@ def main():
     print 'app       : %s' % acc.get_app(args.a)
     print 'device_ids: %s' % len(install_data)
 
-    for did, campaign_id in install_data:
-        print '  ', did, campaign_id
+    for did, campaign_id, cost in install_data:
+        print '  ', did, campaign_id, cost
 
 
 if __name__ =='__main__':

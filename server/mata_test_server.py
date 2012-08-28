@@ -19,9 +19,6 @@ app = Flask(__name__)
 app.debug = True
 
 
-class AuthenticationError(Exception): pass
-
-
 
 #------------------------------------------------------------------------
 # Helper functions
@@ -32,11 +29,11 @@ def requires_auth(f):
         auth = request.authorization
         try:
             if not auth:
-                raise AuthenticationError()
+                raise DemoData.AuthenticationError()
             account = DemoData(auth.username, auth.password)
             return f(account, *args, **kwargs)
 
-        except AuthenticationError:
+        except DemoData.AuthenticationError:
             return Response(
                         'Could not verify your access level for that URL.\nYou have to login with proper credentials',
                         401,
@@ -149,11 +146,10 @@ def get_campaign_aggregate(account):
             date_str = iday.isoformat()
             installs = account.generate_install_data(date_str, app_id)
 
-            def _gen_campaign(num_installs, campaign_id):
+            def _gen_campaign(num_installs, campaign_id, cost):
                 # simple multiple of installs
                 num_impressions = num_installs*5
                 num_clicks = num_installs*2
-                spend = num_installs * 150
 
                 agg_data.append({
                     "day"                 : date_str,
@@ -164,7 +160,7 @@ def get_campaign_aggregate(account):
                     "impressions"         : num_impressions,
                     "clicks"              : num_clicks,
                     "downloads"           : num_installs,
-                    "spend"               : spend,
+                    "spend"               : cost,
                     "currency"            : "USD",
                     "target_manufacturer" : ["Samsung"],
                     "target_platform"     : ["Nexus S", u"\u963f\u91cc\u4e91"],
@@ -173,9 +169,11 @@ def get_campaign_aggregate(account):
 
             get_campaign_id = operator.itemgetter(1)
             installs.sort(key=get_campaign_id)
-            for campaign_id, g in itertools.groupby(installs, get_campaign_id):
-                count = len(list(g))
-                _gen_campaign(count, campaign_id)
+            for campaign_id, _installs_grouped in itertools.groupby(installs, get_campaign_id):
+                _installs_grouped = list(_installs_grouped)
+                count = len(_installs_grouped)
+                cost = sum(c for _,_,c in _installs_grouped)
+                _gen_campaign(count, campaign_id, cost)
 
         iday += datetime.timedelta(1)
 
@@ -217,7 +215,7 @@ def get_installs(account):
         app_name = app['application_name']
         device_campaign_lst = account.generate_install_data(day, app_id)
 
-        for did, campaign_id in device_campaign_lst:
+        for did, campaign_id, cost in device_campaign_lst:
             installs.append({
                 "device_ids"    : {"udid": did},
                 "app_id"        : app_id,

@@ -152,7 +152,7 @@ def main():
     parser.add_argument('-p', '--password', help='password')
     parser.add_argument('-e', '--end-point', default='app', choices=['app', 'agg', 'ins'], help='Select the MATA end_point')
     parser.add_argument('-a', '--app-id', help='app_id')
-    parser.add_argument('-o', '--output', help='Save http fetch in files. Filenames are {output_dir}/{date}{end_point}{output}.')
+    parser.add_argument('-o', '--output', help='Save http fetch in files. Filenames are augmented with date string.')
     parser.add_argument('-x', action='store_true', help='Validate MATA result in strict mode (to be implemented)')
     parser.add_argument('base_url', default=DEFAULT_BASE_URL, nargs='?', help='Base URL')
     parser.add_argument('start', default=today, nargs='?', help='start date yyyy-mm-dd (default today)')

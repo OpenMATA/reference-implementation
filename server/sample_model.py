@@ -87,7 +87,7 @@ class DemoData(object):
             # adding the cost of all 6 together should be 63 (0x3f)
             x,y = divmod(i,6)
             campaign_id = 10 + x
-            cost = 1 + 0.01 * pow(2,y)
+            cost = 100 + 1 * pow(2,y)
 
             result.append((did, campaign_id, cost))
 

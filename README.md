@@ -1,3 +1,10 @@
+API Documentation
+=================
+
+Documentation of Mobile Ad Tracking API v1.0 can be found in MATA_API_v1.0.pdf document in this repository or at the following URL:
+
+https://github.com/OpenMATA/reference-implementation/blob/master/MATA_API_v1.0.pdf?raw=true
+
 MATA Reference Implementation
 =============================
 
